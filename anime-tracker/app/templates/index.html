@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Anime Tracker</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div id="mainContainer">
+    <h1>🎌 Anime Tracker</h1>
+
+    <!-- Formulario -->
+    <form id="perfilForm">
+      <label><strong>Tu nombre/perfil:</strong></label>
+      <input type="text" id="perfil" required>
+      <button type="submit">Usar perfil</button>
+    </form>
+
+    <p>⚠️ Ingresá tu perfil para empezar a marcar animes como vistos.</p>
+
+    <!-- Botones secundarios -->
+    <div class="nav-btns">
+      <a href="/vistos" class="btn btn-nav">📋 Ver animes vistos</a>
+      <a href="/descargar" class="btn btn-nav">⬇ Descargar lista CSV</a>
+    </div>
+
+    <!-- Contenedor del anime -->
+    <div id="animeContainer" class="anime-card" style="display: none;"></div>
+  </div>
+  <div id="animeCardLayout">
+    <!-- Parte visual que sí se actualiza -->
+    <div id="animeVisual" class="anime-visual">
+      <img id="animeImg" src="" alt="anime">
+      <h3 id="animeTitle"></h3>
+      <a id="animeLink" href="#" target="_blank" class="btn btn-blue">Ver en AnimeList</a>
+    </div>
+  
+    <!-- Botones que no cambian -->
+    <div class="anime-actions">
+      <button class="btn btn-green" onclick="marcarVisto()">Marcar como visto</button>
+      <button class="btn btn-gray" onclick="descartarAnime()">No visto</button>
+    </div>
+  </div>
+  
+</div>
+
+
+
+  <script>
+    let perfil = "";
+    let animeActual = null;
+    const container = document.getElementById("animeContainer");
+    
+    document.getElementById("perfilForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      perfil = document.getElementById("perfil").value.trim();
+      if (perfil !== "") {
+        obtenerAnimeAleatorio();
+      }
+    });
+    
+    async function obtenerAnimeAleatorio() {
+      try {
+        const res = await fetch("https://api.jikan.moe/v4/random/anime");
+        const data = await res.json();
+        animeActual = {
+          id: data.data.mal_id,
+          titulo: data.data.title,
+          imagen: data.data.images.jpg.large_image_url,
+          link: data.data.url
+        };
+        mostrarAnime(animeActual);
+      } catch (err) {
+        mostrarMensajeError();
+      }
+    }
+    
+    async function obtenerRecomendado(id) {
+      try {
+        const res = await fetch(`https://api.jikan.moe/v4/anime/${id}/recommendations`);
+        const data = await res.json();
+    
+        if (data.data.length > 0) {
+          const elegido = data.data[Math.floor(Math.random() * data.data.length)].entry;
+          animeActual = {
+            id: elegido.mal_id,
+            titulo: elegido.title,
+            imagen: elegido.images.jpg.large_image_url,
+            link: elegido.url
+          };
+          mostrarAnime(animeActual);
+        } else {
+          await obtenerAnimeAleatorio(); // fallback
+        }
+      } catch (err) {
+        await obtenerAnimeAleatorio(); // fallback también en error
+      }
+    }
+    
+    function mostrarAnime(anime) {
+      document.getElementById("animeImg").src = anime.imagen;
+      document.getElementById("animeImg").alt = anime.titulo;
+      document.getElementById("animeTitle").textContent = anime.titulo;
+      document.getElementById("animeLink").href = anime.link;
+}
+
+    
+    function mostrarMensajeError() {
+      container.innerHTML = `<div class="vistos-card">⚠️ No se pudo cargar el anime. Intenta de nuevo.</div>`;
+    }
+    
+    function marcarVisto() {
+      fetch('/marcar_visto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `anime_id=${animeActual.id}&titulo=${encodeURIComponent(animeActual.titulo)}&perfil=${encodeURIComponent(perfil)}`
+      });
+      obtenerRecomendado(animeActual.id);
+    }
+    
+    function descartarAnime() {
+      obtenerAnimeAleatorio();
+    }
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Animes Vistos</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div id="mainContainer">
+    <h1>📺 Animes que ya viste</h1>
+    <a href="/" class="btn btn-nav">⬅ Volver</a>
+
+    {% if animes %}
+    <div class="vistos-grid">
+        {% for anime in animes %}
+        <div class="vistos-card">
+            <h3>{{ anime.titulo }}</h3>
+            <p>👤 <strong>Perfil:</strong> {{ anime.perfil }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>No marcaste ningún anime como visto todavía 😢</p>
+    {% endif %}
+  </div>
+</body>
+</html>
