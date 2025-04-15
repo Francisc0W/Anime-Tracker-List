@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Anime Tracker</title>
+  <link rel="stylesheet" href="/static/style.css">
+  
+</head>
+<body>
+    <h1>🎌 Anime Tracker</h1>
+  
+    <!-- Formulario para capturar el perfil -->
+    <form id="perfilForm" onsubmit="guardarPerfil(event)">
+      <label><strong>Tu nombre/perfil:</strong></label>
+      <input type="text" id="perfil" required placeholder="Ej: Juanito123">
+      <button type="submit">Usar perfil</button>
+    </form>
+  
+    <p>⚠️ Ingresá tu perfil para empezar a marcar animes como vistos.</p>
+  
+    <!-- Enlaces útiles -->
+    <div style="margin-top: 10px;">
+        <a href="/vistos" class="btn btn-nav">📋 Ver animes vistos</a>
+        <a href="/descargar" class="btn btn-nav">⬇ Descargar lista CSV</a>
+    </div>
+      
+    
+    <!-- Contenedor de animes -->
+    <div class="anime-grid" id="animeGrid"></div>
+  
+    <!-- Scripts -->
+    <script>
+        let perfil = "";
+      
+        const animeGrid = document.getElementById("animeGrid");
+      
+        // Lista de animes (puede venir luego de la API)
+        let animes = [
+          { id: 1, titulo: "Naruto", imagen: "https://cdn.myanimelist.net/images/anime/13/17405.jpg", link: "https://myanimelist.net/anime/20/Naruto" },
+          { id: 2, titulo: "Attack on Titan", imagen: "https://cdn.myanimelist.net/images/anime/10/47347.jpg", link: "https://myanimelist.net/anime/16498/Shingeki_no_Kyojin" },
+          { id: 3, titulo: "Death Note", imagen: "https://cdn.myanimelist.net/images/anime/9/9453.jpg", link: "https://myanimelist.net/anime/1535/Death_Note" },
+          { id: 4, titulo: "Fullmetal Alchemist", imagen: "https://cdn.myanimelist.net/images/anime/1223/96541.jpg", link: "https://myanimelist.net/anime/5114/Fullmetal_Alchemist__Brotherhood" },
+          { id: 5, titulo: "Demon Slayer", imagen: "https://cdn.myanimelist.net/images/anime/1286/99889.jpg", link: "https://myanimelist.net/anime/38000/Kimetsu_no_Yaiba" },
+          { id: 6, titulo: "Jujutsu Kaisen", imagen: "https://cdn.myanimelist.net/images/anime/1171/109222.jpg", link: "https://myanimelist.net/anime/40748/Jujutsu_Kaisen" }
+        ];
+      
+        function guardarPerfil(e) {
+          e.preventDefault();
+          perfil = document.getElementById("perfil").value.trim();
+          if (perfil !== "") {
+            renderAnimes();
+          }
+        }
+      
+        function renderAnimes() {
+          animeGrid.innerHTML = "";
+          animes.slice(0, 4).forEach(anime => {
+            const card = document.createElement("div");
+            card.className = "anime-card";
+            card.innerHTML = `
+              <img src="${anime.imagen}" alt="${anime.titulo}">
+              <h3>${anime.titulo}</h3>
+              <a href="${anime.link}" target="_blank" class="btn btn-blue">Ver en AnimeList</a>
+              <button class="btn btn-green" onclick="marcarVisto(${anime.id})">Marcar como visto</button>
+              <button class="btn btn-gray" onclick="descartarAnime(${anime.id})">No visto</button>
+            `;
+            animeGrid.appendChild(card);
+          });
+        }
+      
+        function marcarVisto(id) {
+          const anime = animes.find(a => a.id === id);
+      
+          if (!perfil) {
+            alert("Por favor, ingresá tu perfil antes de continuar.");
+            return;
+          }
+      
+          fetch('/marcar_visto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `anime_id=${anime.id}&titulo=${encodeURIComponent(anime.titulo)}&perfil=${encodeURIComponent(perfil)}`
+          });
+      
+          animes = animes.filter(a => a.id !== id);
+          renderAnimes();
+        }
+      
+        // ✅ ¡SACADA de la otra función!
+        function descartarAnime(id) {
+          animes = animes.filter(a => a.id !== id);
+          renderAnimes();
+        }
+      </script>
+      
+  </body>
+  
+</html>
+
